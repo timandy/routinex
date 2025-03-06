@@ -1,0 +1,175 @@
+# Workflow file of GitHub Actions
+
+name: build
+
+on:
+  push:
+    branches:
+      - main
+      - feature/**
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  Lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout scm
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v6
+
+  CodeQL:
+    needs: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout scm
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: go
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+  Test:
+    needs: Lint
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ darwin, linux, windows ]
+        arch: [ amd64, arm64 ]
+        go: [ '1.24' ]
+        exclude:
+          # linux excludes
+          - os: linux
+            arch: arm64
+          # windows excludes
+          - os: windows
+            arch: arm64
+        include:
+          # combine runs on
+          - os: darwin
+            runs-on: macos-13
+          - os: darwin
+            arch: arm64
+            runs-on: macos-latest
+          - os: linux
+            runs-on: ubuntu-latest
+          - os: windows
+            runs-on: windows-latest
+
+    steps:
+      - name: Checkout scm
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache: false
+
+      - name: Test routinex
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: go test -v -race -coverprofile='coverage.txt' -coverpkg='./...' -covermode=atomic ./...
+
+      - name: Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          name: Codecov on ${{ matrix.os }}/${{ matrix.arch }} go${{ matrix.go }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+  Bench:
+    needs: Lint
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ darwin, linux, windows ]
+        arch: [ amd64, arm64 ]
+        go: [ '1.24' ]
+        exclude:
+          # linux excludes
+          - os: linux
+            arch: arm64
+          # windows excludes
+          - os: windows
+            arch: arm64
+        include:
+          # combine runs on
+          - os: darwin
+            runs-on: macos-13
+          - os: darwin
+            arch: arm64
+            runs-on: macos-latest
+          - os: linux
+            runs-on: ubuntu-latest
+          - os: windows
+            runs-on: windows-latest
+
+    steps:
+      - name: Checkout scm
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache: false
+
+      - name: Install routinex
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: go install -a .
+
+      - name: Clone routine
+        uses: actions/checkout@v4
+        with:
+          repository: timandy/routine
+          ref: main
+          path: routine
+
+      - name: Bench on windows
+        if: ${{ matrix.os == 'windows' }}
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          cd routine
+          go test -bench='.' -run='^$' -count=6 -a | out-file -encoding utf8 normal.txt
+          go test -bench='.' -run='^$' -count=6 -a -toolexec='routinex -v' | out-file -encoding utf8 static.txt
+          go install -a golang.org/x/perf/cmd/benchstat@latest
+          benchstat normal.txt static.txt
+
+      - name: Bench on ${{ matrix.os }}
+        if: ${{ matrix.os != 'windows' }}
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          cd routine
+          go test -bench='.' -run='^$' -count=6 -a > normal.txt
+          go test -bench='.' -run='^$' -count=6 -a -toolexec='routinex -v' > static.txt
+          go install -a golang.org/x/perf/cmd/benchstat@latest
+          benchstat normal.txt static.txt
