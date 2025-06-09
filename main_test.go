@@ -14,7 +14,7 @@ import (
 var goToolDir = exec.RunCmdOutput([]string{"go", "env", "GOTOOLDIR"})
 
 func TestHelp(t *testing.T) {
-	tracker := file.NewFileTracker(&os.Stderr)
+	tracker := file.NewFileTracker(os.Stderr)
 	tracker.Begin()
 	defer tracker.End()
 	//
@@ -27,7 +27,7 @@ func TestHelp(t *testing.T) {
 }
 
 func TestOtherCmd(t *testing.T) {
-	tracker := file.NewFileTracker(&os.Stdout)
+	tracker := file.NewFileTracker(os.Stdout)
 	tracker.Begin()
 	defer tracker.End()
 	//
@@ -40,7 +40,7 @@ func TestOtherCmd(t *testing.T) {
 }
 
 func TestOtherCmdHelp(t *testing.T) {
-	tracker := file.NewFileTracker(&os.Stdout)
+	tracker := file.NewFileTracker(os.Stdout)
 	tracker.Begin()
 	defer tracker.End()
 	//

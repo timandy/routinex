@@ -6,12 +6,12 @@ import (
 )
 
 type FileTracker struct {
-	target    **os.File
-	oldValue  *os.File
-	tempValue *os.File
+	target    *os.File
+	oldValue  os.File
+	tempValue os.File
 }
 
-func NewFileTracker(target **os.File) *FileTracker {
+func NewFileTracker(target *os.File) *FileTracker {
 	return &FileTracker{target: target, oldValue: *target}
 }
 
@@ -20,8 +20,8 @@ func (f *FileTracker) Begin() {
 	if err != nil {
 		panic(err)
 	}
-	*f.target = file
-	f.tempValue = file
+	*f.target = *file
+	f.tempValue = *file
 }
 
 func (f *FileTracker) End() {
@@ -38,7 +38,7 @@ func (f *FileTracker) Value() string {
 	if _, err := f.tempValue.Seek(0, io.SeekStart); err != nil {
 		panic(err)
 	}
-	buff, err := io.ReadAll(f.tempValue)
+	buff, err := io.ReadAll(&f.tempValue)
 	if err != nil {
 		panic(err)
 	}
