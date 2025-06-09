@@ -25,7 +25,7 @@ func SaveAs(path string, fset *token.FileSet, af *ast.File) {
 	if err != nil {
 		panic(err)
 	}
-	defer destFile.Close()
+	defer destFile.Close() //nolint:errcheck
 	// write code to dest file
 	if err = printer.Fprint(destFile, fset, af); err != nil {
 		panic(err)
