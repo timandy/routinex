@@ -44,7 +44,7 @@ func init() {
 }
 
 func TestCompileRuntime(t *testing.T) {
-	tracker := file.NewFileTracker(&os.Stderr)
+	tracker := file.NewFileTracker(os.Stderr)
 	tracker.Begin()
 	defer tracker.End()
 	//
@@ -82,7 +82,7 @@ func TestCompileRuntime(t *testing.T) {
 }
 
 func TestCompileRoutine_Source(t *testing.T) {
-	tracker := file.NewFileTracker(&os.Stderr)
+	tracker := file.NewFileTracker(os.Stderr)
 	tracker.Begin()
 	defer tracker.End()
 	//
@@ -123,7 +123,7 @@ func TestCompileRoutine_Test(t *testing.T) {
 	}, appOpts)
 	exec.RunCmd(remainArgs)
 	//
-	tracker := file.NewFileTracker(&os.Stderr)
+	tracker := file.NewFileTracker(os.Stderr)
 	tracker.Begin()
 	defer tracker.End()
 	//
@@ -155,7 +155,7 @@ func TestCompileRoutine_Test(t *testing.T) {
 }
 
 func TestCoverRoutine_Go1_18(t *testing.T) {
-	tracker := file.NewFileTracker(&os.Stderr)
+	tracker := file.NewFileTracker(os.Stderr)
 	tracker.Begin()
 	defer tracker.End()
 	//
@@ -183,7 +183,7 @@ func TestCoverRoutine_Go1_18(t *testing.T) {
 }
 
 func TestCoverRoutine_Go1_20(t *testing.T) {
-	tracker := file.NewFileTracker(&os.Stderr)
+	tracker := file.NewFileTracker(os.Stderr)
 	tracker.Begin()
 	defer tracker.End()
 	//
