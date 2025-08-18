@@ -42,7 +42,7 @@ func WriteFile(path, data string) {
 	if err != nil {
 		panic(err)
 	}
-	defer destFile.Close()
+	defer destFile.Close() //nolint:errcheck
 	// write data to dest file
 	if _, err = destFile.WriteString(data); err != nil {
 		panic(err)
